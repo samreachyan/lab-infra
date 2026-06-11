@@ -51,7 +51,7 @@ Production-grade Single Sign-On platform with **Keycloak**, **Traefik**, **Sprin
 | `80` | Traefik | Reverse proxy (all `*.localhost` traffic) |
 | `443` | Traefik | HTTPS (self-signed TLS) |
 | `8080` | Keycloak | Identity Provider (also exposed externally) |
-| `8082` | Traefik Dashboard | `traefik.localhost:8082` |
+| `8082` | Traefik Dashboard | `traefik.localhost` |
 | `3000` | Grafana | Internal (via Traefik: `grafana.localhost`) |
 | `3001` | Uptime Kuma | Internal (via Traefik: `uptime-kuma.localhost`) |
 | `9090` | Prometheus | Internal (via Traefik: `prometheus.localhost`) |
@@ -172,7 +172,7 @@ curl http://api.localhost/api/health
 | **Grafana** | http://grafana.localhost | Dashboards & alerting (SSO via Keycloak) |
 | **Prometheus** | http://prometheus.localhost | Metrics collection (8 scrape jobs) |
 | **Uptime Kuma** | http://uptime-kuma.localhost | Service uptime monitoring |
-| **Traefik Dashboard** | http://traefik.localhost:8082 | Reverse proxy routes & health |
+| **Traefik Dashboard** | http://traefik.localhost | Reverse proxy routes & health |
 
 ### Prometheus Metrics Endpoints
 - Traefik: `/metrics` on port 8080

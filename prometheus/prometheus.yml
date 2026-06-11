@@ -1,0 +1,70 @@
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+  external_labels:
+    environment: "production-sso"
+    region: "local"
+
+# Alertmanager (future)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: []
+
+# Rule files
+rule_files: []
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Traefik metrics
+  - job_name: "traefik"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["traefik:8080"]
+
+  # API Gateway
+  - job_name: "gateway"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["gateway:8080"]
+
+  # Transfer Service
+  - job_name: "transfer-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["transfer-service:8080"]
+
+  # Payment Service
+  - job_name: "payment-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["payment-service:8080"]
+
+  # Notification Service
+  - job_name: "notification-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["notification-service:8080"]
+
+  # Keycloak metrics (if metrics SPI is enabled)
+  - job_name: "keycloak"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["keycloak:8080"]
+
+  # Grafana self-monitoring
+  - job_name: "grafana"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["grafana:3000"]
+
+  # PostgreSQL metrics (from postgres_exporter if added)
+  # - job_name: "postgres"
+  #   static_configs:
+  #     - targets: ["postgres-exporter:9187"]

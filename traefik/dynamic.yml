@@ -1,0 +1,122 @@
+# ============================================
+# Traefik Dynamic Configuration (File Provider)
+# ============================================
+
+http:
+  # Global middlewares
+  middlewares:
+    security-headers:
+      headers:
+        frameDeny: true
+        sslRedirect: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+        customFrameOptionsValue: DENY
+
+  routers:
+    # Traefik Dashboard
+    dashboard:
+      rule: "Host(`traefik.localhost`)"
+      service: api@internal
+      entryPoints:
+        - web
+
+    # Keycloak
+    keycloak:
+      rule: "Host(`keycloak.localhost`)"
+      service: keycloak-service
+      entryPoints:
+        - web
+
+    # Portal UI
+    portal:
+      rule: "Host(`portal.localhost`)"
+      service: portal-service
+      entryPoints:
+        - web
+
+    # API Gateway
+    api-gateway:
+      rule: "Host(`api.localhost`)"
+      service: api-gateway-service
+      entryPoints:
+        - web
+
+    # Grafana
+    grafana:
+      rule: "Host(`grafana.localhost`)"
+      service: grafana-service
+      entryPoints:
+        - web
+
+    # Prometheus (no auth)
+    prometheus:
+      rule: "Host(`prometheus.localhost`)"
+      service: prometheus-service
+      entryPoints:
+        - web
+
+    # Uptime Kuma
+    uptime-kuma:
+      rule: "Host(`uptime-kuma.localhost`)"
+      service: uptime-kuma-service
+      entryPoints:
+        - web
+
+  services:
+    # Internal Docker hostname routing (container_name == hostname)
+    keycloak-service:
+      loadBalancer:
+        servers:
+          - url: "http://keycloak:8080"
+
+    portal-service:
+      loadBalancer:
+        servers:
+          - url: "http://portal-ui:80"
+
+    api-gateway-service:
+      loadBalancer:
+        servers:
+          - url: "http://gateway:8080"
+
+    grafana-service:
+      loadBalancer:
+        servers:
+          - url: "http://grafana:3000"
+
+    prometheus-service:
+      loadBalancer:
+        servers:
+          - url: "http://prometheus:9090"
+
+    uptime-kuma-service:
+      loadBalancer:
+        servers:
+          - url: "http://uptime-kuma:3001"
+
+# TLS configuration (self-signed for local development)
+tls:
+  certificates:
+    - certFile: /etc/traefik/certs/localhost.crt
+      keyFile: /etc/traefik/certs/localhost.key
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /etc/traefik/certs/localhost.crt
+        keyFile: /etc/traefik/certs/localhost.key
+
+# Metrics
+metrics:
+  prometheus:
+    addEntryPointsLabels: true
+    addRoutersLabels: true
+    addServicesLabels: true
+
+accessLog:
+  filePath: "/dev/stdout"
+  format: json

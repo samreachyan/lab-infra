@@ -1,0 +1,87 @@
+{
+  "title": "Loki Health & Log Shipping",
+  "uid": "loki-health",
+  "version": 1,
+  "tags": ["loki", "infrastructure"],
+  "schemaVersion": 39,
+  "timezone": "browser",
+  "panels": [
+    {
+      "title": "Loki Disk Usage",
+      "type": "gauge",
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0},
+      "targets": [
+        {
+          "expr": "(sum(loki_ingester_stored_chunks_total) - sum(loki_ingester_stored_chunks_total offset 1h)) / 3600",
+          "legendFormat": "chunks/sec"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"]
+        },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 80},
+              {"color": "red", "value": 90}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Loki Ingestion Rate",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 0},
+      "targets": [
+        {
+          "expr": "rate(loki_distributor_bytes_received_total[5m])",
+          "legendFormat": "bytes/sec"
+        }
+      ]
+    },
+    {
+      "title": "Loki Request Errors (4xx/5xx)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0},
+      "targets": [
+        {
+          "expr": "rate(loki_distributor_ingester_append_failures_total[5m])",
+          "legendFormat": "ingestion errors"
+        }
+      ]
+    },
+    {
+      "title": "Application Log Shipping Status",
+      "type": "stat",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
+      "targets": [
+        {
+          "expr": "up{application=~\"api-service|worker-service|approval-service|notification-service\"}",
+          "legendFormat": "{{application}}"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "textMode": "auto"
+      }
+    }
+  ]
+}

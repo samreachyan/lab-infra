@@ -1,0 +1,462 @@
+{
+  "id": "sakcode-prod",
+  "realm": "sakcode-prod",
+  "displayName": "SakCode Production SSO",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 30,
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN",
+        "description": "Full administrative access",
+        "composite": true,
+        "composites": {
+          "realm": ["USER", "DEVOPS", "BACKEND"]
+        }
+      },
+      {
+        "name": "USER",
+        "description": "Standard user access"
+      },
+      {
+        "name": "DEVOPS",
+        "description": "DevOps team role - can access Grafana and Prometheus",
+        "composite": true,
+        "composites": {
+          "realm": ["grafana_admin", "prometheus_admin"]
+        }
+      },
+      {
+        "name": "BACKEND",
+        "description": "Backend service role",
+        "composite": true,
+        "composites": {
+          "realm": ["USER"]
+        }
+      },
+      {
+        "name": "grafana_admin",
+        "description": "Grafana admin access"
+      },
+      {
+        "name": "prometheus_admin",
+        "description": "Prometheus admin access"
+      }
+    ],
+    "client": {
+      "portal-api": [
+        {
+          "name": "transfer:read",
+          "description": "Read transfer data"
+        },
+        {
+          "name": "transfer:write",
+          "description": "Create/update transfer data"
+        },
+        {
+          "name": "payment:read",
+          "description": "Read payment data"
+        },
+        {
+          "name": "payment:create",
+          "description": "Create payments"
+        }
+      ],
+      "portal-ui": [
+        {
+          "name": "portal_admin",
+          "description": "Portal admin access"
+        }
+      ],
+      "grafana": [
+        {
+          "name": "grafana_admin",
+          "description": "Grafana admin access"
+        }
+      ],
+      "prometheus-proxy": [
+        {
+          "name": "prometheus_admin",
+          "description": "Prometheus admin access"
+        }
+      ]
+    }
+  },
+  "groups": [
+    {
+      "name": "admin",
+      "path": "/admin",
+      "realmRoles": ["ADMIN"],
+      "clientRoles": {
+        "portal-api": ["transfer:read", "transfer:write", "payment:read", "payment:create"],
+        "portal-ui": ["portal_admin"]
+      }
+    },
+    {
+      "name": "devops",
+      "path": "/devops",
+      "realmRoles": ["DEVOPS", "USER"],
+      "clientRoles": {
+        "grafana": ["grafana_admin"],
+        "prometheus-proxy": ["prometheus_admin"]
+      }
+    },
+    {
+      "name": "backend",
+      "path": "/backend",
+      "realmRoles": ["BACKEND", "USER"],
+      "clientRoles": {
+        "portal-api": ["transfer:read", "transfer:write"]
+      }
+    },
+    {
+      "name": "business",
+      "path": "/business",
+      "realmRoles": ["USER"],
+      "clientRoles": {
+        "portal-api": ["payment:read", "payment:create"]
+      }
+    }
+  ],
+  "defaultRole": {
+    "name": "USER",
+    "description": "Default role for new users"
+  },
+  "clients": [
+    {
+      "clientId": "portal-ui",
+      "name": "Portal UI",
+      "description": "Portal Single Page Application",
+      "enabled": true,
+      "publicClient": true,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://portal.localhost/*",
+        "http://portal.localhost/silent-refresh.html"
+      ],
+      "webOrigins": ["http://portal.localhost"],
+      "protocol": "openid-connect",
+      "adminUrl": "http://portal.localhost",
+      "fullScopeAllowed": true
+    },
+    {
+      "clientId": "portal-api",
+      "name": "Portal API Gateway",
+      "description": "Backend API Gateway - bearer-only client",
+      "enabled": true,
+      "publicClient": false,
+      "bearerOnly": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "attributes": {
+        "access.token.lifespan": "300",
+        "client.session.idle.timeout": "1800",
+        "client.session.max.lifespan": "36000"
+      },
+      "fullScopeAllowed": false
+    },
+    {
+      "clientId": "grafana",
+      "name": "Grafana SSO",
+      "description": "Grafana OAuth2/OIDC Client",
+      "enabled": true,
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "secret": "grafana-client-secret",
+      "redirectUris": [
+        "http://grafana.localhost/login/generic_oauth"
+      ],
+      "webOrigins": ["http://grafana.localhost"],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true
+    },
+    {
+      "clientId": "prometheus-proxy",
+      "name": "Prometheus OAuth2-Proxy",
+      "description": "OAuth2-Proxy client for Prometheus SSO",
+      "enabled": true,
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "secret": "prometheus-proxy-secret",
+      "redirectUris": [
+        "http://prometheus.localhost/oauth2/callback"
+      ],
+      "webOrigins": ["http://prometheus.localhost"],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true
+    }
+  ],
+  "clientScopes": [
+    {
+      "name": "openid",
+      "description": "OpenID Connect scope - required for OIDC authentication",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "gui.order": "",
+        "consent.screen.text": ""
+      }
+    },
+    {
+      "name": "profile",
+      "description": "Profile scope - username and full name claims",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "gui.order": "",
+        "consent.screen.text": ""
+      },
+      "protocolMappers": [
+        {
+          "name": "username",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "username",
+            "claim.name": "preferred_username",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "fullname",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-full-name-mapper",
+          "consentRequired": false,
+          "config": {
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "email",
+      "description": "Email scope - email claim",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "gui.order": "",
+        "consent.screen.text": ""
+      },
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "email",
+            "claim.name": "email",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "transfer_scope",
+      "description": "Transfer service scopes",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "transfer-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "portal-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "roles",
+      "description": "Realm and client roles",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "foo",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "multivalued": "true"
+          }
+        },
+        {
+          "name": "client roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "foo",
+            "access.token.claim": "true",
+            "claim.name": "resource_access.${client_id}.roles",
+            "jsonType.label": "String",
+            "multivalued": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "defaultDefaultClientScopes": ["openid", "profile", "email", "roles"],
+  "defaultOptionalClientScopes": ["offline_access", "transfer_scope"],
+  "users": [
+    {
+      "username": "samreach",
+      "email": "samreach@sakcode.com",
+      "firstName": "Sam",
+      "lastName": "Reach",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["ADMIN", "USER", "DEVOPS", "BACKEND", "grafana_admin", "prometheus_admin"],
+      "groups": ["/admin"]
+    },
+    {
+      "username": "devops-user",
+      "email": "devops@sakcode.com",
+      "firstName": "Dev",
+      "lastName": "Ops",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["DEVOPS", "USER", "grafana_admin", "prometheus_admin"],
+      "clientRoles": {
+        "grafana": ["grafana_admin"],
+        "prometheus-proxy": ["prometheus_admin"]
+      },
+      "groups": ["/devops"]
+    },
+    {
+      "username": "backend-user",
+      "email": "backend@sakcode.com",
+      "firstName": "Back",
+      "lastName": "End",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["BACKEND", "USER"],
+      "clientRoles": {
+        "portal-api": ["transfer:read", "transfer:write"]
+      },
+      "groups": ["/backend"]
+    },
+    {
+      "username": "business-user",
+      "email": "business@sakcode.com",
+      "firstName": "Business",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["USER"],
+      "clientRoles": {
+        "portal-api": ["payment:read", "payment:create"]
+      },
+      "groups": ["/business"]
+    }
+  ],
+  "scopeMappings": [
+    {
+      "clientScope": "transfer_scope",
+      "roles": ["transfer:read", "transfer:write"]
+    }
+  ],
+  "keycloakVersion": "24.0.5",
+  "accessTokenLifespan": 300,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 7200,
+  "ssoSessionMaxLifespan": 86400,
+  "ssoSessionIdleTimeoutRememberMe": 0,
+  "ssoSessionMaxLifespanRememberMe": 0,
+  "offlineSessionIdleTimeout": 2592000,
+  "offlineSessionMaxLifespanEnabled": false,
+  "offlineSessionMaxLifespan": 5184000,
+  "clientSessionIdleTimeout": 7200,
+  "clientSessionMaxLifespan": 86400,
+  "clientOfflineSessionIdleTimeout": 0,
+  "clientOfflineSessionMaxLifespan": 0,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "accessCodeLifespanLogin": 1800,
+  "actionTokenGeneratedByAdminLifespan": 43200,
+  "actionTokenGeneratedByUserLifespan": 300,
+  "oauth2DeviceCodeLifespan": 600,
+  "oauth2DevicePollingInterval": 5
+}

@@ -1,0 +1,67 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: sakcode-api-gateway
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:http://keycloak:8080/realms/sakcode-prod}
+          jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/certs
+
+# Service URLs
+service:
+  transfer:
+    url: ${TRANSFER_SERVICE_URL:http://transfer-service:8080}
+  payment:
+    url: ${PAYMENT_SERVICE_URL:http://payment-service:8080}
+  notification:
+    url: ${NOTIFICATION_SERVICE_URL:http://notification-service:8080}
+
+# Actuator for health and metrics
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: when-authorized
+      roles: ADMIN
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: production-sso
+
+# Resilience4j Rate Limiter
+resilience4j:
+  ratelimiter:
+    instances:
+      transferRateLimiter:
+        limitForPeriod: 50
+        limitRefreshPeriod: 1s
+        timeoutDuration: 500ms
+      paymentRateLimiter:
+        limitForPeriod: 30
+        limitRefreshPeriod: 1s
+        timeoutDuration: 500ms
+      notificationRateLimiter:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1s
+        timeoutDuration: 500ms
+
+# Logging
+logging:
+  level:
+    com.sakcode.gateway: INFO
+    org.springframework.security: INFO
+    org.springframework.security.oauth2: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

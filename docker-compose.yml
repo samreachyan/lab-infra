@@ -56,9 +56,14 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      disable: true
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     ports:
       - "8080:8080"
+      - "9000:9000"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.keycloak.rule=Host(`keycloak.localhost`)"
@@ -75,6 +80,7 @@ services:
     command:
       - --api.insecure=false
       - --api.dashboard=true
+      - --ping=true
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
       - --providers.file.filename=/etc/traefik/dynamic.yml
@@ -91,7 +97,7 @@ services:
     networks:
       - platform
     healthcheck:
-      test: ["CMD", "traefik", "healthcheck"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ping || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -283,18 +289,23 @@ services:
       - "traefik.http.services.prometheus.loadbalancer.server.port=4180"
 
   # ============================================
-  # Phase 9: Uptime Kuma (Monitoring Dashboard)
+  # Phase 9: Uptime Kuma (Production Monitoring)
   # ============================================
   uptime-kuma:
     image: louislam/uptime-kuma:2.4.0
     container_name: uptime-kuma
     restart: unless-stopped
+    environment:
+      # Production: disable setup wizard, auto-login
+      UPTIME_KUMA_DISABLE_FRAME_SAMEORIGIN: "1"
+      # SSL/TLS settings for production
+      NODE_EXTRA_CA_CERTS: "/etc/ssl/certs/ca-certificates.crt"
     volumes:
       - uptime_kuma_data:/app/data
     networks:
       - platform
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:3001/"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:3001/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
